@@ -1,0 +1,183 @@
+/* Общие стили */
+body {
+    font-family: "Roboto Condensed", sans-serif;
+    font-weight: 300;
+    margin: 0;
+    background-color: #ffffff;
+}
+
+header {
+    background-color: #99CCCC;
+    color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+header .logo {
+    height: 40px;
+}
+
+header .project-title {
+    font-size: 24px;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.header-right {
+    font-size: 14px;
+    text-align: right;
+    margin-top: 10px;
+    flex-basis: 100%;
+}
+
+.header-right span {
+    color: #ffffff;
+    margin-right: 5px;
+}
+
+.header-right a {
+    color: #ffffff;
+    text-decoration: underline;
+    transition: color 0.3s ease;
+}
+
+.header-right a:hover {
+    color: #dddddd;
+}
+
+main {
+    padding: 5px 20px;
+    background-color: #ffffff;
+}
+
+.button {
+    display: block;
+    width: 40vw;
+    margin: 10px auto;
+    padding: 16px 32px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    background-color: #666699;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    text-align: center;
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.button:hover {
+    background-color: #555588;
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.image-section {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 20px auto;
+    width: 80%;
+    box-sizing: border-box;
+}
+
+.image-link {
+    text-align: center;
+}
+
+.image-link img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.image-link img:hover {
+    transform: scale(1.05);
+}
+
+.description {
+    padding: 20px;
+    margin: 20px auto;
+    width: 52%;
+    box-sizing: border-box;
+    background-color: #f8f8f8;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.description.left {
+    margin-left: 0;
+    margin-right: auto;
+    text-align: left;
+}
+
+.description.right {
+    margin-right: 0;
+    margin-left: auto;
+    text-align: right;
+}
+
+.description h2 {
+    margin: 5px;
+    color: #333;
+    font-size: 20px;
+}
+
+.description p {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #555;
+}
+
+footer {
+    background-color: #666699;
+    color: #fff;
+    padding: 15px 0;
+    text-align: center;
+}
+
+footer p {
+    margin: 0;
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    header {
+        flex-wrap: wrap;
+    }
+
+    .header-left {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .project-title {
+        text-align: center;
+        font-size: 20px;
+    }
+
+    .header-right {
+        text-align: center;
+    }
+
+    .image-section {
+        grid-template-columns: 1fr;
+    }
+
+    .description {
+        width: 90%;
+    }
+}
