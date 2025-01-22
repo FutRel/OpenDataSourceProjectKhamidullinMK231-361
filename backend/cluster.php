@@ -80,8 +80,16 @@ function kmeansClustering($points, $numClusters, $maxIterations = 100)
         return ['id_set' => $point['id_set'], 'cluster_id' => $point['cluster_id']];
     }, $points);
 
-    // Результат: массив точек с добавленными cluster_id
-    return $points;
+    $finalPoints = array_map(function ($point) {
+        return [
+            'id_set' => $point['id_set'],
+            'cluster_id' => $point['cluster_id'],
+            'dataset' => $point['dataset']
+        ];
+    }, $points);
+    
+    // Результат: массив точек с добавленными cluster_id и dataset
+    return $finalPoints;
 }
 
 // Функция для вычисления выпуклой оболочки (convex hull)
@@ -181,9 +189,9 @@ try {
     $clusteredPoints = kmeansClustering($points, $numClusters);
 
     // Обновление cluster_id в таблице combined_data
-    $stmt = $pdo->prepare("UPDATE combined_data SET cluster_id = :cluster_id WHERE id_set = :id_set");
+    $stmt = $pdo->prepare("UPDATE combined_data SET cluster_id = :cluster_id WHERE id_set = :id_set AND dataset = :dataset");
     foreach ($clusteredPoints as $point) {
-        $stmt->execute([':cluster_id' => $point['cluster_id'], ':id_set' => $point['id_set']]);
+        $stmt->execute([':cluster_id' => $point['cluster_id'], ':dataset' => $point['dataset'], ':id_set' => $point['id_set']]);
     }
 
     // Группировка точек по кластерам
