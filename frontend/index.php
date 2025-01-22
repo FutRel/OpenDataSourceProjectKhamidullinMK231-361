@@ -14,13 +14,13 @@
         <div class="header-left">
             <img src="\data\logo.svg" alt="Логотип" class="logo">
             <span class="project-title">Социальное благополучие Москвы</span>
-            <nav class="navbar">
+        </div>
+        <nav class="navbar">
             <ul class="nav-links">
                 <li><a href="index.php">Главная</a></li>
                 <li><a href="map.php">Карта</a></li>
             </ul>
         </nav>
-        </div>
     </header>
     <main>
         <section>

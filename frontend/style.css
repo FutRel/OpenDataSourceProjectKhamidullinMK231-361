@@ -11,9 +11,9 @@ header {
     color: #fff;
     padding: 10px 20px;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start; /* Расположение элементов влево */
     align-items: center;
-    
+    gap: 10px; /* Расстояние между элементами */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -31,6 +31,28 @@ header .project-title {
     font-size: 24px;
     font-weight: 500;
     color: #ffffff;
+}
+
+.navbar {
+    display: flex;
+    margin-left: auto;
+    margin-right: 15vw;
+}
+
+.navbar ul {
+    display: inline-flex;
+    gap: 5vw;
+}
+
+.navbar a {
+    text-decoration: none;
+    color: #ffffff;
+    font-size: 20px;
+    transition: color 0.3s ease;
+}
+
+.navbar a:hover {
+    color: #C980A4;
 }
 
 footer span {
@@ -292,5 +314,8 @@ button:hover:not(:disabled) {
         margin: 0;
         flex-basis: 100%;
         text-align: center;
+    }
+    .navbar ul {
+        display: block;
     }
 }

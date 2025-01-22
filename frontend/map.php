@@ -128,15 +128,15 @@
 <body>
   <header>
     <div class="header-left">
-      <img src="/data/logo.svg" alt="Логотип" class="logo">
+      <img src="\data\logo.svg" alt="Логотип" class="logo">
       <span class="project-title">Социальное благополучие Москвы</span>
-      <nav class="navbar">
-            <ul class="nav-links">
-                <li><a href="index.php">Главная</a></li>
-                <li><a href="map.php">Карта</a></li>
-            </ul>
-        </nav>
     </div>
+    <nav class="navbar">
+      <ul class="nav-links">
+        <li><a href="index.php">Главная</a></li>
+        <li><a href="map.php">Карта</a></li>
+      </ul>
+    </nav>
   </header>
 
   <div class="content-container">
@@ -172,7 +172,7 @@
       </form>
     </div>
   </div>
-  
+
   <footer>
     <span>Проект использует открытые данные:</span>
     <a href="https://data.mos.ru" target="_blank">Портал открытых данных Правительства Москвы</a>
