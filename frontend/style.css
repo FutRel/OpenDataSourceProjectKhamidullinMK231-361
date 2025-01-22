@@ -1,3 +1,4 @@
+/* Основные стили для ПК */
 body {
     font-family: "Roboto Condensed", sans-serif;
     font-weight: 300;
@@ -65,7 +66,6 @@ footer p {
     margin: 0;
     font-size: 14px;
 }
-
 
 main {
     padding: 5px 20px;
@@ -153,7 +153,6 @@ main {
     line-height: 1.6;
     color: #555;
 }
-
 
 .content-container {
     display: flex;
@@ -245,4 +244,45 @@ button:hover:not(:disabled) {
 
 .instructions li {
     margin-bottom: 5px;
+}
+
+/* Мобильная версия */
+@media (max-width: 768px) {
+    .content-container {
+        flex-direction: column;
+        height: auto;
+    }
+
+    #map {
+        width: 100%;
+        height: 300px; /* Убедитесь, что высота карты задана */
+        min-height: 200px; /* Для предотвращения нулевой высоты */
+    }
+
+    .control-panel {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .control-panel form {
+        gap: 15px;
+    }
+
+    .control-panel h2 {
+        font-size: 18px;
+    }
+
+    button {
+        width: 100%;
+        font-size: 14px;
+    }
+
+    .slider-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #slider-value {
+        font-size: 14px;
+    }
 }

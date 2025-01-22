@@ -97,7 +97,6 @@
       drawBatch();
     }
 
-
     // Обработка отправки формы
     function handleFormSubmit(event) {
       event.preventDefault();
