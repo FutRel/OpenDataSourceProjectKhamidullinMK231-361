@@ -13,12 +13,13 @@
     <header>
         <div class="header-left">
             <img src="\data\logo.svg" alt="Логотип" class="logo">
-            <span class="project-title">Анализ и визуализация
-                статистической информации о социальном благополучии районов г. Москва</span>
-        </div>
-        <div class="header-right">
-            <span>Проект использует открытые данные:</span>
-            <a href="https://data.mos.ru" target="_blank">Портал открытых данных Правительства Москвы</a>
+            <span class="project-title">Социальное благополучие Москвы</span>
+            <nav class="navbar">
+            <ul class="nav-links">
+                <li><a href="index.php">Главная</a></li>
+                <li><a href="map.php">Карта</a></li>
+            </ul>
+        </nav>
         </div>
     </header>
     <main>
@@ -81,7 +82,8 @@
         </section>
     </main>
     <footer>
-        <p>&copy; 2025 ХМК. Контактная информация: m.k.khamidullin@mospolytech.ru</p>
+        <span>Проект использует открытые данные:</span>
+        <a href="https://data.mos.ru" target="_blank">Портал открытых данных Правительства Москвы</a>
     </footer>
 </body>
 

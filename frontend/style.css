@@ -13,7 +13,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
+    
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -33,38 +33,29 @@ header .project-title {
     color: #ffffff;
 }
 
-.header-right {
-    font-size: 14px;
-    text-align: right;
-    margin-top: 10px;
-    flex-basis: 100%;
-}
-
-.header-right span {
+footer span {
     color: #ffffff;
     margin-right: 5px;
 }
 
-.header-right a {
+footer a {
     color: #ffffff;
     text-decoration: underline;
     transition: color 0.3s ease;
 }
 
-.header-right a:hover {
-    color: #dddddd;
+footer a:hover {
+    color: #618D95;
 }
 
 footer {
+    font-size: 14px;
+    margin: 0;
+    flex-basis: 100%;
     background-color: #C980A4;
     color: #fff;
     padding: 15px 0;
     text-align: center;
-}
-
-footer p {
-    margin: 0;
-    font-size: 14px;
 }
 
 main {
@@ -156,7 +147,7 @@ main {
 
 .content-container {
     display: flex;
-    height: calc(100vh - 80px);
+    height: calc(100vh - 60px);
 }
 
 #map {
@@ -255,12 +246,12 @@ button:hover:not(:disabled) {
 
     #map {
         width: 100%;
-        height: 300px; /* Убедитесь, что высота карты задана */
-        min-height: 200px; /* Для предотвращения нулевой высоты */
+        height: 300px;
+        min-height: 200px;
     }
 
     .control-panel {
-        width: 100%;
+        width: 95%;
         padding: 10px;
     }
 
@@ -273,7 +264,8 @@ button:hover:not(:disabled) {
     }
 
     button {
-        width: 100%;
+        margin: 0 auto;
+        width: 90%;
         font-size: 14px;
     }
 
@@ -284,5 +276,21 @@ button:hover:not(:disabled) {
 
     #slider-value {
         font-size: 14px;
+    }
+    
+    .instructions ul {
+        padding-left: 20px;
+        margin: 10px 0 0;
+    }
+    
+    .instructions li {
+        margin-bottom: 10px;
+        margin-right: 20px;
+    }
+
+    footer {
+        margin: 0;
+        flex-basis: 100%;
+        text-align: center;
     }
 }
