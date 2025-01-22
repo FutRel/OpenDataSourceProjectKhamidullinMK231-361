@@ -2,81 +2,100 @@
 require 'db.php';
 
 header('Content-Type: application/json; charset=utf-8');
+ini_set('memory_limit', '512M');
 
-function kmeansClustering($points, $numClusters)
+function kmeansClustering($points, $numClusters, $maxIterations = 100)
 {
+    // Шаг 1: Инициализация случайных центроидов
     $centroids = [];
     $clusters = [];
-    $maxIterations = 100;
 
-    // Шаг 1: Инициализация центроидов случайным образом
+    // Инициализируем случайные центроиды
     $randomKeys = array_rand($points, $numClusters);
     foreach ($randomKeys as $key) {
-        $centroids[] = $points[$key];
+        $centroids[] = [
+            'lat_set' => $points[$key]['lat_set'] + (mt_rand(-10, 10) / 10000), // Добавлен случайный сдвиг
+            'long_set' => $points[$key]['long_set'] + (mt_rand(-10, 10) / 10000)
+        ];
     }
 
-    for ($iteration = 0; $iteration < $maxIterations; $iteration++) {
-        // Шаг 2: Распределение точек по ближайшим центроидам
-        $clusters = array_fill(0, $numClusters, []);
-        foreach ($points as $point) {
-            $closestCentroid = null;
-            $minDistance = PHP_FLOAT_MAX;
-            foreach ($centroids as $centroidIndex => $centroid) {
+    // Шаг 2: Инициализация переменных
+    $iterations = 0;
+    $finished = false;
+
+    // Шаг 3: Основной цикл кластеризации
+    while (!$finished && $iterations < $maxIterations) {
+        $iterations++;
+
+        // Шаг 3.1: Расчет расстояния и присвоение точкам ближайшего кластера
+        foreach ($points as &$point) {
+            $minDistance = INF;
+            $assignedCluster = -1;
+            foreach ($centroids as $clusterId => $centroid) {
                 $distance = sqrt(pow($point['lat_set'] - $centroid['lat_set'], 2) + pow($point['long_set'] - $centroid['long_set'], 2));
                 if ($distance < $minDistance) {
                     $minDistance = $distance;
-                    $closestCentroid = $centroidIndex;
+                    $assignedCluster = $clusterId;
                 }
             }
-            $clusters[$closestCentroid][] = $point;
+            $point['cluster_id'] = $assignedCluster;
+        }
+        unset($point);
+
+        // Шаг 3.2: Пересчет центроидов для каждого кластера
+        $newCentroids = array_fill(0, $numClusters, ['lat_set' => 0, 'long_set' => 0, 'count' => 0]);
+        foreach ($points as $point) {
+            $clusterId = $point['cluster_id'];
+            $newCentroids[$clusterId]['lat_set'] += $point['lat_set'];
+            $newCentroids[$clusterId]['long_set'] += $point['long_set'];
+            $newCentroids[$clusterId]['count']++;
         }
 
-        // Шаг 3: Пересчет центроидов
-        $newCentroids = [];
-        foreach ($clusters as $clusterPoints) {
-            if (count($clusterPoints) === 0) {
+        $finished = true;
+        foreach ($newCentroids as $clusterId => $centroid) {
+            if ($centroid['count'] == 0) {
+                // Если кластер пустой, выбираем новый случайный центроид
+                $randomPoint = $points[array_rand($points)];
+                $centroids[$clusterId] = [
+                    'lat_set' => $randomPoint['lat_set'],
+                    'long_set' => $randomPoint['long_set']
+                ];
+                $finished = false; // Обязательно продолжить итерации
                 continue;
             }
-            $sumLat = 0;
-            $sumLon = 0;
-            foreach ($clusterPoints as $clusterPoint) {
-                $sumLat += $clusterPoint['lat_set'];
-                $sumLon += $clusterPoint['long_set'];
+
+            $newLat = $centroid['lat_set'] / $centroid['count'];
+            $newLong = $centroid['long_set'] / $centroid['count'];
+
+            if (abs($newLat - $centroids[$clusterId]['lat_set']) > 0.001 || abs($newLong - $centroids[$clusterId]['long_set']) > 0.001) {
+                $finished = false;
             }
-            $newCentroids[] = [
-                'lat_set' => $sumLat / count($clusterPoints),
-                'long_set' => $sumLon / count($clusterPoints)
-            ];
-        }
 
-        // Проверка на сходимость
-        if ($centroids === $newCentroids) {
-            break;
-        }
-        $centroids = $newCentroids;
-    }
-
-    // Присваиваем cluster_id для всех точек
-    $result = [];
-    foreach ($clusters as $clusterId => $clusterPoints) {
-        foreach ($clusterPoints as $point) {
-            $result[] = [
-                'id_set' => $point['id_set'],
-                'cluster_id' => $clusterId
-            ];
+            $centroids[$clusterId] = ['lat_set' => $newLat, 'long_set' => $newLong];
         }
     }
 
-    return $result;
+    // Логирование: точки с id_set и cluster_id
+    $finalPoints = array_map(function ($point) {
+        return ['id_set' => $point['id_set'], 'cluster_id' => $point['cluster_id']];
+    }, $points);
+
+    // Результат: массив точек с добавленными cluster_id
+    return $points;
 }
+
+// Функция для вычисления выпуклой оболочки (convex hull)
 function convexHull($points)
 {
+    if (count($points) < 3) {
+        return $points; // Выпуклая оболочка невозможна для менее чем 3 точек
+    }
+
     // Сортируем точки по координате X (и Y для одинаковых X)
     usort($points, function ($a, $b) {
         return $a['lat_set'] <=> $b['lat_set'] ?: $a['long_set'] <=> $b['long_set'];
     });
 
-    // Логика для построения выпуклой оболочки (алгоритм Грэхема или Джарвиса)
     $lower = [];
     foreach ($points as $point) {
         while (count($lower) >= 2 && cross($lower[count($lower) - 2], $lower[count($lower) - 1], $point) <= 0) {
@@ -98,10 +117,14 @@ function convexHull($points)
 
     return array_merge($lower, $upper);
 }
-function cross($o, $a, $b)
+
+// Функция для вычисления векторного произведения
+function cross($p1, $p2, $p3)
 {
-    return ($a['lat_set'] - $o['lat_set']) * ($b['long_set'] - $o['long_set']) - ($a['long_set'] - $o['long_set']) * ($b['lat_set'] - $o['lat_set']);
+    return ($p2['lat_set'] - $p1['lat_set']) * ($p3['long_set'] - $p1['long_set']) -
+        ($p2['long_set'] - $p1['long_set']) * ($p3['lat_set'] - $p1['lat_set']);
 }
+
 
 try {
     $numClusters = isset($_GET['clusters']) ? (int) $_GET['clusters'] : 12;
@@ -128,6 +151,24 @@ try {
         $stmt->execute([':dataset' => $tableName]);
     }
 
+    // Создаем временную таблицу для хранения уникальных записей
+    $pdo->exec("
+    CREATE TEMPORARY TABLE unique_points AS
+    SELECT MIN(id_set) AS id_set
+    FROM combined_data
+    GROUP BY lat_set, long_set
+    ");
+
+    // Удаляем дубли из оригинальной таблицы, оставляя только уникальные записи
+    $pdo->exec("
+    DELETE FROM combined_data
+    WHERE id_set NOT IN (SELECT id_set FROM unique_points)
+    ");
+
+    // Удаляем временную таблицу для хранения уникальных записей
+    $pdo->exec("DROP TEMPORARY TABLE IF EXISTS unique_points");
+
+
     // Устанавливаем значение cluster_id по умолчанию для данных без кластеризации
     $pdo->exec("UPDATE combined_data SET cluster_id = 0 WHERE cluster_id IS NULL");
 
@@ -152,8 +193,11 @@ try {
     $clusters = [];
     foreach ($points as $point) {
         $clusterId = $point['cluster_id'];
-        if (!isset($clusters[$clusterId])) {
-            $clusters[$clusterId] = ['hull' => [], 'points' => []];
+        if (!array_key_exists($clusterId, $clusters)) {
+            $clusters[$clusterId] = [
+                'hull' => [],
+                'points' => []
+            ];
         }
         $clusters[$clusterId]['points'][] = [
             'lat_set' => $point['lat_set'],
@@ -167,15 +211,38 @@ try {
     foreach ($clusters as $clusterId => &$cluster) {
         $cluster['hull'] = convexHull($cluster['points']);
     }
+    unset($cluster);
 
-    $colors = ['#EFF8FB', '#A4D4E6', '#92C8B6', '#F4E3E5', '#D1A7AC', '#E0F7EF', '#B0B7C6', '#F5F0E6', '#394F59', '#0E3E48'];
+    $colors = [
+        '#C8E3F0',
+        '#74AAC3',
+        '#5A9C85',
+        '#E1BFC4',
+        '#AA7380',
+        '#A3D3BF',
+        '#8091A0',
+        '#D7C4A8',
+        '#253841',
+        '#082E38',
+        '#2A4D53',
+        '#8E526A',
+        '#1C2D35',
+        '#726A5C',
+        '#4F3B57',
+        '#143D46',
+        '#5C374C',
+        '#3F4A4F',
+        '#6D6A75',
+        '#8A5A3C'
+    ];
+
     $result = [];
     foreach ($clusters as $clusterId => $cluster) {
         $result[] = [
             'cluster_id' => $clusterId,
             'size' => count($cluster['points']),
             'hull' => $cluster['hull'],
-            'color' => $colors[$clusterId % count($colors)],
+            'color' => $colors[$clusterId],
             'points' => $cluster['points']
         ];
     }

@@ -5,88 +5,123 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Социальное благополучие Москвы</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="/data/logo.svg" type="image/svg">
+  <link rel="icon" href="/data/logo.svg" type="image/svg+xml">
   <meta charset="utf-8">
   <script src="https://maps.api.2gis.ru/2.0/loader.js?pkg=full"></script>
   <script type="text/javascript">
-    let map;
-    let clustersLayer;
+    let map, clustersLayer;
 
-    // Инициализация карты
-    DG.then(function () {
-      map = DG.map('map', {
-        center: [55.755820, 37.617633],
-        zoom: 12
-      });
+    DG.then(() => {
+      map = DG.map('map', { center: [55.755820, 37.617633], zoom: 11 });
       clustersLayer = DG.layerGroup().addTo(map);
     });
 
-    // Очистка старых кластеров
-    function clearClusters() {
-      if (clustersLayer) {
-        clustersLayer.clearLayers();
+    const datasetIcons = {
+      dataset1: '../data/icon1.png',
+      dataset2: '../data/icon2.png',
+      dataset3: '../data/icon3.png',
+      dataset4: '../data/icon4.png',
+    };
+
+    async function fetchData(url) {
+      try {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error(`Ошибка сети: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+          processClusters(data.clusters);
+        } else {
+          alert(data.error || 'Ошибка обработки данных');
+        }
+      } catch (error) {
+        console.error('Ошибка запроса:', error);
+        alert('Ошибка при загрузке данных.');
       }
     }
 
-    // Отрисовка кластеров на карте
-    function drawClusters(clusters) {
-      clearClusters();
-      clusters.forEach(cluster => {
-        const { cluster_id, size, hull, color } = cluster;
-        const polygonCoordinates = hull.map(point => [point.lat, point.lon]);
+    // Обработка и отрисовка кластеров и точек
+    function processClusters(clusters) {
+      clustersLayer.clearLayers();
 
-        DG.polygon(polygonCoordinates, { color: color, fillOpacity: 0.3 })
-          .addTo(clustersLayer)
-          .bindPopup(`<strong>Кластер ${cluster_id}</strong><br>Размер: ${size}`);
-      });
+      const batchSize = 100;
+      let currentClusterIndex = 0;
+      let currentPointIndex = 0;
+
+      function drawBatch() {
+        while (currentClusterIndex < clusters.length) {
+          const cluster = clusters[currentClusterIndex];
+
+          while (currentPointIndex < cluster.points.length) {
+            const point = cluster.points[currentPointIndex];
+
+            const iconUrl = datasetIcons[point.dataset] || 'default-icon.png';
+            const markerIcon = DG.icon({
+              iconUrl: iconUrl,
+              iconSize: [10, 10],
+            });
+
+            DG.marker([point.lat_set, point.long_set], { icon: markerIcon })
+              .addTo(clustersLayer)
+              .bindPopup(`<strong>${point.name_set}</strong><br>Датасет: ${point.dataset}`);
+
+            currentPointIndex++;
+
+            if (currentPointIndex % batchSize === 0) {
+              setTimeout(drawBatch, 50);
+              return;
+            }
+          }
+
+          if (cluster.hull.length > 2) {
+            console.log(`Отрисовка полигона для кластера ${cluster.cluster_id}`);
+            const polygonCoords = cluster.hull.map(({ lat_set, long_set }) => [lat_set, long_set]);
+            DG.polygon(polygonCoords, { color: cluster.color, fillOpacity: 0.5 })
+              .addTo(clustersLayer)
+              .bindPopup(`<strong>Кластер ${cluster.cluster_id}</strong><br>Размер: ${cluster.size}`);
+          }
+
+          // Переход к следующему кластеру
+          console.log(`Кластер ${cluster.cluster_id} обработан.`);
+          currentClusterIndex++;
+          currentPointIndex = 0;
+        }
+
+        console.log('Все кластеры успешно отрисованы.');
+      }
+
+      drawBatch();
     }
 
-    // Обработчик отправки формы
+
+    // Обработка отправки формы
     function handleFormSubmit(event) {
       event.preventDefault();
-      const sliderValue = document.getElementById('range-slider').value;
-      const checkboxes = document.querySelectorAll('.dataset-checkbox:checked');
-      const selectedDatasets = Array.from(checkboxes).map(cb => cb.value);
 
-      if (selectedDatasets.length === 0) {
-        alert('Выберите хотя бы один набор данных');
-        return;
-      }
+      const sliderValue = document.getElementById('range-slider').value;
+      const selectedDatasets = Array.from(document.querySelectorAll('.dataset-checkbox:checked'))
+        .map(cb => cb.value);
 
       const url = `../backend/cluster.php?clusters=${sliderValue}&datasets=${selectedDatasets.join(',')}`;
-
-      fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            drawClusters(data.clusters);
-          } else {
-            alert(data.error);
-          }
-        })
-        .catch(error => {
-          console.error('Ошибка:', error);
-          alert('Ошибка при загрузке данных');
-        });
+      fetchData(url);
     }
 
-    // Обновление значения ползунка
     function updateSliderValue(value) {
       document.getElementById('slider-value').textContent = value;
     }
 
-    // Включение/отключение кнопки отправки
     function toggleSubmitButton() {
-      const checkboxes = document.querySelectorAll('.dataset-checkbox');
-      const submitButton = document.querySelector('button[type="submit"]');
-      const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
-      submitButton.disabled = !anyChecked;
+      const hasSelection = Array.from(document.querySelectorAll('.dataset-checkbox')).some(cb => cb.checked);
+      document.querySelector('button[type="submit"]').disabled = !hasSelection;
     }
 
     document.addEventListener('DOMContentLoaded', () => {
       toggleSubmitButton();
-      const checkboxes = document.querySelectorAll('.dataset-checkbox');
-      checkboxes.forEach(cb => cb.addEventListener('change', toggleSubmitButton));
+      document.querySelectorAll('.dataset-checkbox').forEach(cb => cb.addEventListener('change', toggleSubmitButton));
     });
   </script>
 </head>
@@ -95,7 +130,8 @@
   <header>
     <div class="header-left">
       <img src="/data/logo.svg" alt="Логотип" class="logo">
-      <span class="project-title">Анализ и визуализация статистической информации о социальном благополучии районов Москвы</span>
+      <span class="project-title">Анализ и визуализация статистической информации о социальном благополучии районов г.
+        Москва</span>
     </div>
     <div class="header-right">
       <span>Проект использует открытые данные:</span>
@@ -108,27 +144,28 @@
     <div class="control-panel">
       <h2>Панель управления</h2>
       <form onsubmit="handleFormSubmit(event)">
-        <label for="range-slider">Количество областей (1-15):</label>
+        <label for="range-slider">Количество областей (2-20):</label>
         <div class="slider-container">
-          <input type="range" id="range-slider" name="scale" min="1" max="15" value="12" oninput="updateSliderValue(this.value)">
+          <input type="range" id="range-slider" name="scale" min="2" max="20" value="12"
+            oninput="updateSliderValue(this.value)">
           <span id="slider-value">12</span>
         </div>
 
         <div class="checkbox-group">
           <label><input type="checkbox" class="dataset-checkbox" value="dataset1"> Тренажерные городки</label>
-          <label><input type="checkbox" class="dataset-checkbox" value="dataset2"> Остановки наземного транспорта</label>
+          <label><input type="checkbox" class="dataset-checkbox" value="dataset2"> Остановки наземного
+            транспорта</label>
           <label><input type="checkbox" class="dataset-checkbox" value="dataset3"> Стационарные торговые объекты</label>
           <label><input type="checkbox" class="dataset-checkbox" value="dataset4"> Школы</label>
         </div>
 
         <button type="submit" disabled>Подтвердить</button>
         <div class="instructions">
-          <p>
-            Для использования приложения выполните следующие шаги:
-          </p>
+          <p>Для использования приложения выполните следующие шаги:</p>
           <ul>
-            <li>Выберите количество областей с помощью ползунка (от 1 до 15).</li>
-            <li>Отметьте галочками один или несколько наборов данных, по результатам анализа которых хотите получить результат.</li>
+            <li>Выберите количество областей с помощью ползунка (от 2 до 20).</li>
+            <li>Отметьте галочками один или несколько наборов данных, по результатам анализа которых хотите получить
+              результат.</li>
             <li>Нажмите кнопку "Подтвердить" для выполнения расчётов и отображения результатов на карте.</li>
           </ul>
         </div>
