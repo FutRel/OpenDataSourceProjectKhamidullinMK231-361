@@ -19,6 +19,7 @@
             <ul class="nav-links">
                 <li><a href="index.php">Главная</a></li>
                 <li><a href="map.php">Карта</a></li>
+                <li><a href="data.php">Данные</a></li>
             </ul>
         </nav>
     </header>
